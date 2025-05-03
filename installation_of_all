@@ -183,6 +183,120 @@ and try to login using the "OIDC" method.
 This will redirect you to Keycloak for authentication and then back to Vault upon successful login
 
 
+#Fix Vault "Not Authorized" Error
+
+1.	First, log in to Vault UI with the root token: 
+    o	Go to http://your_ip_address:8200
+    o	Click "Method" and select "Token"
+    o	Enter your root token: vault-token (the one you configured in docker-compose.yml)
+    o	Click "Sign In"
+2.	Create a policy for identity management: 
+    o	In the left sidebar, navigate to "Access" → "Policies"
+    o	Click "Create ACL policy +"
+    o	For Name, enter oidc-identity-policy
+    o	For Policy, enter the following:
+
+                      # Allow viewing auth methods
+                      path "sys/auth" {
+                        capabilities = ["read", "list"]
+                      }
+                      
+                      # Allow viewing auth method configurations
+                      path "sys/auth/*" {
+                        capabilities = ["read", "list"]
+                      }
+                      
+                      # Allow viewing policies
+                      path "sys/policies/acl" {
+                        capabilities = ["read", "list"]
+                      }
+                      
+                      path "sys/policies/acl/*" {
+                        capabilities = ["read"]
+                      }
+                      
+                      # Access to identity management
+                      path "identity/*" {
+                        capabilities = ["read", "list"]
+                      }
+                      
+                      # Additional UI paths
+                      path "sys/mounts" {
+                        capabilities = ["read", "list"]
+                      }
+                      
+                      # Allow listing and reading all identities
+                      path "identity/entity/id" {
+                        capabilities = ["read", "list"]
+                      }
+                      
+                      path "identity/entity/id/*" {
+                        capabilities = ["read"]
+                      }
+                      
+                      # Include all capabilities from the default policy
+                      # Token self-management
+                      path "auth/token/lookup-self" {
+                        capabilities = ["read"]
+                      }
+                      
+                      path "auth/token/renew-self" {
+                        capabilities = ["update"]
+                      }
+                      
+                      path "auth/token/revoke-self" {
+                        capabilities = ["update"]
+                      }
+                      
+                      # Access to UI-specific APIs
+                      path "sys/internal/ui/*" {
+                        capabilities = ["read"]
+                      }
+                      # Allow managing secret engines
+                      path "sys/mounts/*" {
+                        capabilities = ["create", "read", "update", "delete", "list"]
+                      }
+                      
+                      path "sys/mounts" {
+                        capabilities = ["read", "create", "delete", "update", "list"]
+                      }
+                      
+                      # Allow managing all secrets
+                      path "+/*" {
+                        capabilities = ["create", "read", "update", "delete", "list"]
+                      }
+                      
+                      # Allow managing auth methods
+                      path "sys/auth/*" {
+                        capabilities = ["create", "read", "update", "delete", "sudo"]
+                      }
+                      
+                      # Allow viewing and managing policies
+                      path "sys/policies/*" {
+                        capabilities = ["create", "read", "update", "delete", "list"]
+                      }
+                      
+                      # System management
+                      path "sys/*" {
+                        capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+                      }
+                      
+                      # Identity management
+                      path "identity/*" {
+                        capabilities = ["create", "read", "update", "delete", "list"]
+                      }
+
+o	Click "Create policy"
+
+3.	Update your OIDC role to include this policy: 
+    o	Go to "Access" → "Auth Methods"
+    o	Click on "oidc/" in the list
+    o	Click "Edit role" on the default role
+    o	In the "Policies" field, add oidc-identity-policy (in addition to the existing policies)
+    o	Click "Save"
+4.	Now log out and log back in using OIDC authentication 
+    o	You should now have access to the identity features
+
 
 --------------------------------INSTALLATION OF JUMPSERVER--------------------------------
 #run this command in /opt directory
