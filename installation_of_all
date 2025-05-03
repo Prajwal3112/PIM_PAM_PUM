@@ -1,0 +1,199 @@
+This is complete installtion steps to install PIM, PAM and PUM services!
+
+PIM => Vault : A tool for managing secrets and sensitive data, often used in securing privileged credentials.
+PAM => JumpServer : An open-source PAM tool designed for secure access management.
+PUM => Keycloak : An identity and access management tool, often associated with authentication and authorization.
+
+
+--------------------------------INSTALLTION OF DOCKER--------------------------------
+# Update package lists
+sudo apt update
+
+# Install prerequisites
+sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+
+# Add Docker's official GPG key
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+# Add Docker repository for linux/ubuntu
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+# Install Docker
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io
+
+# Install Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+--------------------------------END OF INSTALLTION OF DOCKER--------------------------------
+
+
+--------------------------------CREATING DIRECTORY AND DOCKER FILE--------------------------------
+
+# Create a directory for the project
+# NOTE: for convenience make this directory in the sudo su directory only! 
+# remember the path
+mkdir vault-keycloak
+cd vault-keycloak
+
+# Create a Docker Compose file
+nano docker-compose.yml
+
+# Add the following content to the docker-compose.yml:
+# NOTE: You can change the password of the services like KEYCLOAK_ADMIN, KEYCLOAK_ADMIN_PASSWORD
+version: '3.8'
+
+services:
+  vault:
+    image: hashicorp/vault:latest
+    container_name: vault
+    ports:
+      - "8200:8200"
+    environment:
+      - VAULT_DEV_ROOT_TOKEN_ID=vault-token 
+      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault-data:/vault/data
+    command: server -dev
+    restart: unless-stopped
+    networks:
+      - vault-keycloak-network
+
+  postgres:
+    image: postgres:15
+    container_name: keycloak-postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - vault-keycloak-network
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak_password
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin_password
+    command: start-dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - vault-keycloak-network
+    restart: unless-stopped
+
+networks:
+  vault-keycloak-network:
+    driver: bridge
+
+volumes:
+  vault-data:
+  postgres-data:
+
+--------------------------------END OF CREATING DIRECTORY AND DOCKER FILE--------------------------------
+
+
+#now RUN the docker file
+docker-compose up -d
+
+#command to check all the services are running or not
+docker-compose ps
+
+
+
+--------------------------------CONFIGURE KEYCLOAK AND VAULT--------------------------------
+# Access Keycloak Admin Console
+# Open your browser and navigate to:
+http://your_ip_address:8080/admin/master/console/
+
+# Default Login credentials are :
+# or the one you defined in docker-compose file
+Username: admin
+Password: admin_password
+
+Create a new client in Keycloak for Vault
+
+1. Go to "Clients" in the left sidebar and click "Create"
+    Set the following:
+
+      Client ID: vault
+      Client Protocol: openid-connect
+      Root URL: http://your_ip_address:8200
+
+    Click Save
+
+2. In the client settings:
+
+    Set Access Type to "confidential"
+    Set Valid Redirect URIs to "http://your_ip_address:8200/ui/vault/auth/oidc/oidc/callback"
+    Set Web Origins to "+"
+  Click Save
+
+3. Go to the "Credentials" tab and note the "Secret" value - you'll need it for Vault configuration
+
+# HERE we completed the configuration in keycloak for vault, copy the secret value generated!
+
+
+#------------------------------CONFIGURATION OF VAULT--------------------------------------
+# Get into the Vault container
+docker exec -it vault sh
+
+# Inside the container, run:
+export VAULT_ADDR='http://127.0.0.1:8200'
+export VAULT_TOKEN='vault-token'
+vault auth enable oidc
+
+# Configure OIDC within the container
+vault write auth/oidc/config \
+    oidc_discovery_url="http://keycloak:8080/realms/master" \
+    oidc_client_id="vault" \
+    oidc_client_secret="YOUR_CLIENT_SECRET_FROM_KEYCLOAK" \
+    default_role="default"
+
+# Create the default role
+vault write auth/oidc/role/default \
+    bound_audiences="vault" \
+    allowed_redirect_uris="http://your_ip_address:8200/ui/vault/auth/oidc/oidc/callback" \
+    user_claim="sub" \
+    policies="default"
+
+# Create a policy for OIDC users
+vault policy write oidc-user - <<EOF
+path "secret/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+EOF
+
+
+#Test the integration
+Now you can access the Vault UI at http://your_ip_address:8200 
+and try to login using the "OIDC" method. 
+This will redirect you to Keycloak for authentication and then back to Vault upon successful login
+
+
+
+--------------------------------INSTALLATION OF JUMPSERVER--------------------------------
+#run this command in /opt directory
+# go inside the opt directory
+
+cd /opt
+
+git clone https://github.com/jumpserver/jumpserver.git
+
+sudo curl -sSL https://github.com/jumpserver/jumpserver/releases/download/v4.0.0/quick_start.sh | bash
+---------------------------END OF INSTALLATION OF JUMPSERVER--------------------------------
+
+
+
