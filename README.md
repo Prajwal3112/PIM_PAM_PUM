@@ -3,7 +3,7 @@
 This repository contains a script to automate the installation of the following security tools:
 
 - **PIM (Privileged Identity Management)**: HashiCorp Vault - For managing secrets and sensitive data
-- **PAM (Privileged Access Management)**: JumpServer - For secure access management
+- **PAM (Privileged Access Management)**: CyberSentinel - For secure access management
 - **PUM (Privileged User Management)**: Keycloak - For identity and access management
 
 ## Quick Installation
@@ -11,7 +11,7 @@ This repository contains a script to automate the installation of the following 
 Run the following command as root or with sudo privileges:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/PIM-PAM-PUM/main/install-pim-pam-pum.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Prajwal3112/PIM_PAM_PUM/main/install-pim-pam-pum.sh | sudo bash
 ```
 
 ## What the script does
@@ -34,7 +34,7 @@ curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/PIM-PAM-PUM/main/inst
 
 ## Manual Installation Steps
 
-If you prefer to install services manually, check the detailed installation steps in the [MANUAL_INSTALL.md](MANUAL_INSTALL.md) file.
+If you prefer to install services manually, check the detailed installation steps in the installation_of_all file. https://github.com/Prajwal3112/PIM_PAM_PUM/blob/main/installation_of_all
 
 ## Post-Installation
 
