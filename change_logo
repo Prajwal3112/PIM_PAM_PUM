@@ -1,0 +1,4 @@
+Command to list all the logos : docker exec -it jms_core ls -la /opt/jumpserver/apps/static/img
+
+Command to change the logos for jumpserver:
+docker cp /home/soc/image_ka_name.png jms_core:/opt/jumpserver/apps/static/img/jo_change_karna_hai_vo.png
