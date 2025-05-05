@@ -2,7 +2,7 @@
 
 # PIM, PAM and PUM Installer Script
 # PIM => Vault : A tool for managing secrets and sensitive data
-# PAM => JumpServer : An open-source PAM tool for secure access management
+# PAM => CyberSentinel Privelege Management : An open-source PAM tool for secure access management
 # PUM => Keycloak : An identity and access management tool
 
 # Text formatting
@@ -57,7 +57,7 @@ command_exists() {
 
 # Welcome message
 echo -e "\n${GREEN}===========================================================${NC}"
-echo -e "${GREEN}    PIM (Vault), PAM (JumpServer) & PUM (Keycloak) Installer${NC}"
+echo -e "${GREEN}    PIM (Vault), PAM (CBS Privilege Management) & PUM (Keycloak) Installer${NC}"
 echo -e "${GREEN}===========================================================${NC}\n"
 
 # Detect the IP address
@@ -204,17 +204,17 @@ start_services() {
 
 # Install JumpServer
 install_jumpserver() {
-    log "Installing JumpServer..."
+    log "Installing CBS Privilege Management..."
     
     cd /opt || error "Failed to navigate to /opt directory."
     
-    log "Cloning JumpServer repository..."
+    log "Cloning CBS Privilege Management repository..."
     git clone https://github.com/jumpserver/jumpserver.git || error "Failed to clone JumpServer repository."
     
-    log "Running JumpServer quick start script..."
+    log "Running CBS Privilege Management quick start script..."
     curl -sSL https://github.com/jumpserver/jumpserver/releases/download/v4.0.0/quick_start.sh | bash || error "Failed to run JumpServer quick start script."
     
-    success "JumpServer installation completed!"
+    success "CBS Privilege Management installation completed!"
 }
 
 # Configure Vault
@@ -438,8 +438,8 @@ main() {
     echo -e "  - Admin Console: ${BLUE}http://$IP_ADDRESS:8080/admin/master/console/${NC}"
     echo -e "  - Username: ${BLUE}admin${NC}"
     echo -e "  - Password: ${BLUE}admin_password${NC}"
-    echo -e "\nPAM (JumpServer):"
-    echo -e "  - Check JumpServer documentation for access details."
+    echo -e "\nPAM (CBS Privilege Management):"
+    echo -e "  - Check CBS Privilege Management documentation for access details."
     echo -e "  - Typically available at: ${BLUE}http://$IP_ADDRESS:80${NC}"
     
     echo -e "\n${GREEN}===========================================================${NC}"
