@@ -11,7 +11,7 @@ This repository contains a script to automate the installation of the following 
 Run the following command as root or with sudo privileges:
 
 ```bash
-curl -fsSL https://github.com/Prajwal3112/PIM_PAM_PUM/main/install-pim-pam-pum.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Prajwal3112/PIM_PAM_PUM/main/install-pim-pam-pum.sh | sudo bash
 ```
 
 ## What the script does
