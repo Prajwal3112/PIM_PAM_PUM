@@ -2,7 +2,7 @@
 
 # PIM, PAM and PUM Installer Script
 # PIM => Vault : A tool for managing secrets and sensitive data
-# PAM => JumpServer : An open-source PAM tool for secure access management
+# PAM => CyberSentinel : An open-source PAM tool for secure access management
 # PUM => Keycloak : An identity and access management tool
 
 # Text formatting
@@ -57,7 +57,7 @@ command_exists() {
 
 # Welcome message
 echo -e "\n${GREEN}===========================================================${NC}"
-echo -e "${GREEN}    PIM (Vault), PAM (JumpServer) & PUM (Keycloak) Installer${NC}"
+echo -e "${GREEN}    PIM (Vault), PAM (CyberSentinel) & PUM (Keycloak) Installer${NC}"
 echo -e "${GREEN}===========================================================${NC}\n"
 
 # Detect the IP address
@@ -204,17 +204,49 @@ start_services() {
 
 # Install JumpServer
 install_jumpserver() {
-    log "Installing CyberSentinel Privilege Management..."
+    log "Installing CyberSentinel..."
     
     cd /opt || error "Failed to navigate to /opt directory."
     
     log "Cloning CyberSentinel repository..."
-    git clone https://github.com/jumpserver/jumpserver.git || error "Failed to clone JumpServer repository."
+    git clone https://github.com/jumpserver/jumpserver.git > /dev/null 2>&1 || error "Failed to clone CyberSentinel repository."
     
-    log "Running CyberSentinel quick start script..."
-    curl -sSL https://github.com/jumpserver/jumpserver/releases/download/v4.0.0/quick_start.sh | bash || error "Failed to run JumpServer quick start script."
+    log "Running CyberSentinel quick start script (this may take a while)..."
     
-    success "CyberSentinel installation completed!"
+    # Create a progress indicator
+    progress_pid=0
+    show_progress() {
+        local spin='-\|/'
+        local i=0
+        while true; do
+            printf "\r[%c] Installing CyberSentinel... " "${spin:i++%4:1}"
+            sleep 0.5
+        done
+    }
+    
+    # Start progress indicator in background
+    show_progress &
+    progress_pid=$!
+    
+    # Trap to ensure we kill the progress indicator when the script exits or is interrupted
+    trap "kill $progress_pid 2>/dev/null" EXIT
+    
+    # Run the JumpServer installation with all output redirected
+    curl -sSL https://github.com/jumpserver/jumpserver/releases/download/v4.0.0/quick_start.sh | bash > /opt/CyberSentinel_install.log 2>&1
+    
+    # Check if the installation was successful
+    if [ $? -ne 0 ]; then
+        kill $progress_pid 2>/dev/null
+        printf "\r%s\n" "                                              "
+        error "Failed to run CyberSentinel quick start script. Check logs at /opt/CyberSentinel_install.log"
+    fi
+    
+    # Stop the progress indicator
+    kill $progress_pid 2>/dev/null
+    wait $progress_pid 2>/dev/null
+    printf "\r%s\n" "                                              "
+    
+    success "CyberSentinel installation completed! Detailed logs available at /opt/CyberSentinel_install.log"
 }
 
 # Configure Vault
@@ -385,7 +417,7 @@ show_keycloak_config_steps() {
 
 # Customize JumpServer logos
 customize_jumpserver_logos() {
-    log "Customizing JumpServer logos..."
+    log "Customizing CyberSentinel logos..."
     
     # Create temporary directory for logo downloads
     mkdir -p /tmp/cybersentinel_logos || error "Failed to create temporary directory for logos."
@@ -430,7 +462,7 @@ customize_jumpserver_logos() {
     docker restart jms_core jms_lion jms_web jms_chen jms_koko jms_celery jms_redis || warning "Failed to restart some JumpServer containers"
     
     # Clean up temporary files
-    cd / && rm -rf /tmp/jumpserver_logos
+    cd / && rm -rf /tmp/cybersentinel_logos
     
     success "CyberSentinel logo customization completed!"
 }
@@ -493,7 +525,7 @@ main() {
     echo -e "  - Admin Console: ${BLUE}http://$IP_ADDRESS:8080/admin/master/console/${NC}"
     echo -e "  - Username: ${BLUE}admin${NC}"
     echo -e "  - Password: ${BLUE}admin_password${NC}"
-    echo -e "\nPAM (JumpServer):"
+    echo -e "\nPAM (CyberSentinel):"
     echo -e "  - Check CyberSentinel documentation for access details."
     echo -e "  - Typically available at: ${BLUE}http://$IP_ADDRESS:80${NC}"
     
