@@ -44,6 +44,45 @@ After installation:
 2. Configure additional security measures
 3. Set up users and permissions in each system
 
+## Uninstallation
+To completely remove all services and directories created by this script, run the following commands as root or with sudo:
+bash# Stop and remove Docker containers
+cd /opt/vault-keycloak
+docker-compose down -v
+
+# Remove JumpServer containers
+cd /opt/jumpserver
+./jmsctl.sh stop
+./jmsctl.sh down -v
+
+# Remove Docker images related to our services
+docker rmi hashicorp/vault:latest quay.io/keycloak/keycloak:latest postgres:15
+
+# Remove directories created during installation
+rm -rf /opt/vault-keycloak
+rm -rf /opt/jumpserver
+
+# Remove Docker and Docker Compose (optional)
+apt remove -y docker-ce docker-ce-cli containerd.io
+apt autoremove -y
+rm -rf /var/lib/docker
+rm -rf /etc/docker
+rm -f /usr/local/bin/docker-compose
+
+echo "Uninstallation completed. All services and directories have been removed."
+
+Note: This will completely remove all data and configurations. Make sure to back up any important data before running these commands.
+
+## How to Use the Uninstall Script
+## Users can run the uninstallation script using:
+```bash
+curl -fsSL https://raw.githubusercontent.com/Prajwal3112/PIM_PAM_PUM/main/uninstall-pim-pam-pum.sh | sudo bash
+```
+## Or if they've already cloned your repository:
+```bash
+sudo bash uninstall-pim-pam-pum.sh
+```
+
 ## Troubleshooting
 
 If you encounter issues:
