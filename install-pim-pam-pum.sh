@@ -2,7 +2,7 @@
 
 # PIM, PAM and PUM Installer Script
 # PIM => Vault : A tool for managing secrets and sensitive data
-# PAM => CyberSentinel Privelege Management : An open-source PAM tool for secure access management
+# PAM => JumpServer : An open-source PAM tool for secure access management
 # PUM => Keycloak : An identity and access management tool
 
 # Text formatting
@@ -57,7 +57,7 @@ command_exists() {
 
 # Welcome message
 echo -e "\n${GREEN}===========================================================${NC}"
-echo -e "${GREEN}    PIM (Vault), PAM (CBS Privilege Management) & PUM (Keycloak) Installer${NC}"
+echo -e "${GREEN}    PIM (Vault), PAM (JumpServer) & PUM (Keycloak) Installer${NC}"
 echo -e "${GREEN}===========================================================${NC}\n"
 
 # Detect the IP address
@@ -204,17 +204,17 @@ start_services() {
 
 # Install JumpServer
 install_jumpserver() {
-    log "Installing CBS Privilege Management..."
+    log "Installing CyberSentinel Privilege Management..."
     
     cd /opt || error "Failed to navigate to /opt directory."
     
-    log "Cloning CBS Privilege Management repository..."
+    log "Cloning CyberSentinel repository..."
     git clone https://github.com/jumpserver/jumpserver.git || error "Failed to clone JumpServer repository."
     
-    log "Running CBS Privilege Management quick start script..."
+    log "Running CyberSentinel quick start script..."
     curl -sSL https://github.com/jumpserver/jumpserver/releases/download/v4.0.0/quick_start.sh | bash || error "Failed to run JumpServer quick start script."
     
-    success "CBS Privilege Management installation completed!"
+    success "CyberSentinel installation completed!"
 }
 
 # Configure Vault
@@ -383,6 +383,58 @@ show_keycloak_config_steps() {
     echo -e "   You will need this value in the next step.\n"
 }
 
+# Customize JumpServer logos
+customize_jumpserver_logos() {
+    log "Customizing JumpServer logos..."
+    
+    # Create temporary directory for logo downloads
+    mkdir -p /tmp/cybersentinel_logos || error "Failed to create temporary directory for logos."
+    cd /tmp/cybersentinel_logos || error "Failed to change to temporary logo directory."
+    
+    # Download logo files from GitHub repository
+    log "Downloading logo files from GitHub repository..."
+    
+    # Replace YOUR_USERNAME with your actual GitHub username
+    GITHUB_REPO="https://raw.githubusercontent.com/Prajwal3112/PIM_PAM_PUM/main"
+    
+    # Download each logo file
+    curl -s -o 125_x_18.png "${GITHUB_REPO}/125_x_18.png" || error "Failed to download 125_x_18.png"
+    curl -s -o 30_x_40.png "${GITHUB_REPO}/30_x_40.png" || error "Failed to download 30_x_40.png"
+    curl -s -o front_logo.png "${GITHUB_REPO}/front_logo.png" || error "Failed to download front_logo.png"
+    curl -s -o favicon_logo.ico "${GITHUB_REPO}/favicon_logo.ico" || error "Failed to download favicon_logo.ico"
+    
+    # Wait for JumpServer containers to be ready
+    log "Waiting for CyberSentinel containers to be ready..."
+    for i in {1..30}; do
+        if docker ps | grep -q "jms_core"; then
+            break
+        fi
+        log "Waiting for CyberSentinel containers to start (${i}/30)..."
+        sleep 10
+    done
+    
+    if ! docker ps | grep -q "jms_core"; then
+        warning "CyberSentinel core container not found. Logo customization will be skipped."
+        return
+    fi
+    
+    # Copy logo files to JumpServer container
+    log "Copying logo files to CyberSentinel container..."
+    docker cp 125_x_18.png jms_core:/opt/jumpserver/apps/static/img/logo_text_white.png || warning "Failed to copy logo_text_white.png"
+    docker cp 30_x_40.png jms_core:/opt/jumpserver/apps/static/img/logo.png || warning "Failed to copy logo.png"
+    docker cp front_logo.png jms_core:/opt/jumpserver/apps/static/img/login_image.png || warning "Failed to copy login_image.png"
+    docker cp favicon_logo.ico jms_core:/opt/jumpserver/apps/static/img/facio.ico || warning "Failed to copy facio.ico"
+    
+    # Restart JumpServer containers
+    log "Restarting CyberSentinel containers to apply changes..."
+    docker restart jms_core jms_lion jms_web jms_chen jms_koko jms_celery jms_redis || warning "Failed to restart some JumpServer containers"
+    
+    # Clean up temporary files
+    cd / && rm -rf /tmp/jumpserver_logos
+    
+    success "CyberSentinel logo customization completed!"
+}
+
 # Main installation flow
 main() {
     # Install Docker and Docker Compose
@@ -399,6 +451,9 @@ main() {
     
     # Install JumpServer
     install_jumpserver
+    
+    # Customize JumpServer logos
+    customize_jumpserver_logos
     
     # Show Keycloak configuration steps
     show_keycloak_config_steps
@@ -438,8 +493,8 @@ main() {
     echo -e "  - Admin Console: ${BLUE}http://$IP_ADDRESS:8080/admin/master/console/${NC}"
     echo -e "  - Username: ${BLUE}admin${NC}"
     echo -e "  - Password: ${BLUE}admin_password${NC}"
-    echo -e "\nPAM (CBS Privilege Management):"
-    echo -e "  - Check CBS Privilege Management documentation for access details."
+    echo -e "\nPAM (JumpServer):"
+    echo -e "  - Check CyberSentinel documentation for access details."
     echo -e "  - Typically available at: ${BLUE}http://$IP_ADDRESS:80${NC}"
     
     echo -e "\n${GREEN}===========================================================${NC}"
