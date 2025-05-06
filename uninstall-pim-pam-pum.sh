@@ -46,18 +46,18 @@ else
 fi
 
 # Stop and remove JumpServer
-log "Stopping and removing JumpServer..."
+log "Stopping and removing CyberSentinel Privilege Management..."
 if [ -d "/opt/jumpserver" ]; then
     cd /opt/jumpserver
     if [ -f "./jmsctl.sh" ]; then
         ./jmsctl.sh stop
         ./jmsctl.sh down -v
-        success "JumpServer containers removed."
+        success "CyberSentinel containers removed."
     else
-        warning "JumpServer control script not found, skipping."
+        warning "CyberSentinel control script not found, skipping."
     fi
 else
-    warning "JumpServer directory not found, skipping."
+    warning "CyberSentinel directory not found, skipping."
 fi
 
 # Remove Docker images
@@ -69,7 +69,8 @@ success "Docker images removed."
 log "Removing installation directories..."
 rm -rf /opt/vault-keycloak
 rm -rf /opt/jumpserver
-success "Installation directories removed."
+rm -rf /opt/CyberSentinel_install.log
+success "Installation and other directories removed."
 
 # Ask if user wants to remove Docker as well
 read -p "Do you want to remove Docker and Docker Compose as well? (yes/no): " remove_docker
