@@ -526,6 +526,8 @@ main() {
     echo -e "  - Username: ${BLUE}admin${NC}"
     echo -e "  - Password: ${BLUE}admin_password${NC}"
     echo -e "\nPAM (CyberSentinel):"
+    echo -e "  - Username: ${BLUE}admin${NC}"
+    echo -e "  - Password: ${BLUE}ChangeMe${NC}"
     echo -e "  - Check CyberSentinel documentation for access details."
     echo -e "  - Typically available at: ${BLUE}http://$IP_ADDRESS:80${NC}"
     
