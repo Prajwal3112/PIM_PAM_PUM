@@ -211,13 +211,13 @@ show_identity_config_steps() {
     echo -e "   d. Go to 'Credentials' tab and set a password\n"
     
     echo -e "${YELLOW}Press Enter when you have completed all steps above...${NC}"
-    read -r -p ""
+    read -r dummy_var
 }
 
 # Get client secret from user
 get_client_secret() {
     echo -e "\n${YELLOW}Please enter the client secret from step 4 above:${NC}"
-    read -r -p "> " client_secret
+    read -r client_secret
     
     if [ -z "$client_secret" ]; then
         error "Client secret cannot be empty. Please restart the installation."
