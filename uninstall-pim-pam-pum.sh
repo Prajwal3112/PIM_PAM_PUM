@@ -55,7 +55,7 @@ confirm_removal() {
     echo -e "${YELLOW}This action cannot be undone. All configurations, users, and stored data will be lost.${NC}\n"
     
     echo -e "Please type ${RED}${BOLD}REMOVE CYBERSENTINEL${NC} to confirm removal:"
-    read -r -p "> " confirmation
+    read -r confirmation
     
     if [ "$confirmation" != "REMOVE CYBERSENTINEL" ]; then
         echo -e "\n${GREEN}Removal cancelled. System remains intact.${NC}"
@@ -281,7 +281,7 @@ remove_system_configs() {
 # Optional: Remove Docker entirely
 remove_docker_option() {
     echo -e "\n${YELLOW}Do you want to remove Docker and Docker Compose entirely? (y/N)${NC}"
-    read -r -p "> " remove_docker
+    read -r remove_docker
     
     if [[ "$remove_docker" =~ ^[Yy]$ ]]; then
         log "Removing Docker and Docker Compose..."
